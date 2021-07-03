@@ -18,7 +18,7 @@ printListRecursive([Head | Tail]) :-
 printList([Head | Tail]) :-
     format('[~w',Head),
     printListRecursive(Tail),
-    write(']')
+    writeln(']')
     .
 % ======================= List manipulation =======================
 
@@ -58,11 +58,37 @@ printConfiguration(Red, Blue, Yellow, Green) :-
     writeln('\n======================'),
     writeln('Color Configuration'),
     writeln('red'),
-    printList(Red),
+    printList(Red);
     writeln('blue'),
-    printList(Blue),
+    printList(Blue);
     writeln('yellow'),
-    printList(Yellow),
+    printList(Yellow);
     writeln('green'),
     printList(Green)
+    .
+
+% Base case: List is empty and the configuration is printed
+generate([], Red, Blue, Yellow, Green) :- 
+    printConfiguration(Red, Blue, Yellow, Green)
+    .
+
+% General case
+generate([Actual | Rest], Red, Blue, Yellow, Green) :- 
+    % Painting Actual with Red
+    append(Red, [Actual], Modified),
+    generate(Rest, Modified, Blue, Yellow, Green);
+    % Painting Actual with Blue
+    append(Blue, [Actual], Modified),
+    generate(Rest, Red, Modified, Yellow, Green);
+    % Painting Actual with Yellow
+    append(Yellow, [Actual], Modified),
+    generate(Rest, Red, Blue, Modified, Green);
+    % Painting Actual with Green
+    append(Green, [Actual], Modified),
+    generate(Rest, Red, Blue, Yellow, Modified)
+    .
+
+% Generates the territory, given the list of pieces
+genTerritory(Territory) :- 
+    generate(Territory, [], [], [], [])
     .
