@@ -6,12 +6,19 @@
 % append(List, [element], Result)
 
 % Print List: Base case
-printList([]) :- !.
+printListRecursive([]) :- !.
 
 % Print List: Recursion
+printListRecursive([Head | Tail]) :-
+    format(', ~w',Head),
+    printListRecursive(Tail)
+    .
+
+% Print List: Main
 printList([Head | Tail]) :-
-    format('\n~w',Head),
-    printList(Tail)
+    format('[~w',Head),
+    printListRecursive(Tail),
+    write(']')
     .
 % ======================= List manipulation =======================
 
@@ -47,7 +54,9 @@ edgeDef(p, r).
 edge(X, Y) :- (edgeDef(X, Y), !; edgeDef(Y, X)), !.
 
 % Prints all color lists
-printColors(Red, Blue, Yellow, Green) :- 
+printConfiguration(Red, Blue, Yellow, Green) :- 
+    writeln('\n======================'),
+    writeln('Color Configuration'),
     writeln('red'),
     printList(Red),
     writeln('blue'),
