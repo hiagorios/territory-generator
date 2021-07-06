@@ -77,6 +77,25 @@ printConfiguration(Red, Blue, Yellow, Green) :-
     printList(Green)
     .
 
+% Base Case: Unify visited list with result
+breadthSearch([], V, R) :- R = V, !.
+
+% General Case: Returns all reachable pieces starting from list's Head
+breadthSearch([Actual | Discovered], Visited, Result) :- 
+    % Get Actual's adjacents
+    adjacents(Actual, Adj),
+    % Remove already visited from adjacents
+    subtract(Adj, Visited, AdjWithoutVisited),
+    % Remove discovered from the remaining adjacents
+    subtract(AdjWithoutVisited, Discovered, AdjDistinct),
+    % Append remaining adjacents to discovered
+    append(Discovered, AdjDistinct, DiscoveredModified),
+    % Append Actual to already visited
+    append(Visited, [Actual], VisitedModified),
+    breadthSearch(DiscoveredModified, VisitedModified, Result)
+    .
+
+% True if none of the Adjacents is in the ColorList
 canTint([], _) :- !.
 canTint([Head | Tail], ColorList) :- not(member(Head, ColorList)), canTint(Tail, ColorList).
 
@@ -117,27 +136,10 @@ genTerritory(Territory) :-
     Length > 0, Length < 21,
     % Check if there's isolated pieces
     [Head|_] = Territory,
-    wideSearch([Head], WideSearchResult),
-    length(WideSearchResult, WideSearchLength),
-    WideSearchLength == Length,
+    breadthSearch([Head], [], SearchResult),
+    length(SearchResult, SearchLength),
+    (SearchLength == Length,
     % Generate color configurations
-    generate(Territory, [], [], [], [])
-    .
-
-wideSearch([], _) :- !.
-
-% [Head|Tail] - Lista dos elementos ainda não percorridos
-% List - Lista dos elementos já percorridos
-wideSearch([Head | Tail], List) :- 
-    % Pega os adjacentes da Head
-    adjacents(Head, Adj),
-    % Remove dos adjacentes os que estão em List (já foram percorridos)
-    subtract(Adj, List, DistinctElements),
-    % Remove dos restantes os que estão em Tail (ainda vão ser percorridos)
-    subtract(DistinctElements, Tail, DistinctElements2),
-    % Adiciona a tail os restantes
-    append(Tail, DistinctElements2, TailModified),
-    % Adiciona Head a List (já percorridos)
-    append(List, [Head], ListModified),
-    wideSearch(TailModified, ListModified)
+    generate(Territory, [], [], [], []));
+    write('Territory shouldn\'t have isolated pieces')
     .
