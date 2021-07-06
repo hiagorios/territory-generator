@@ -20,6 +20,14 @@ printList([Head | Tail]) :-
     printListRecursive(Tail),
     writeln(']')
     .
+
+subtract([], _, []).
+subtract([Head|Tail], L2, L3) :-
+        member(Head, L2),
+        !,
+        subtract(Tail, L2, L3).
+subtract([Head|Tail1], L2, [Head|Tail3]) :-
+        subtract(Tail1, L2, Tail3).
 % ======================= List manipulation =======================
 
 % ====================== Territory definition =====================
@@ -51,7 +59,8 @@ edgeDef(p, r).
 % ====================== Territory definition =====================
 
 % Bidirectionally checking for edge
-edge(X, Y) :- (edgeDef(X, Y); edgeDef(Y, X)).
+edge(X, Y) :- edgeDef(X, Y); edgeDef(Y, X).
+
 adjacents(Elem, Adj) :- setof(Edges, edge(Elem, Edges), Adj).
 
 % Prints all color lists
@@ -78,32 +87,57 @@ generate([], Red, Blue, Yellow, Green) :-
 
 % General case
 generate([Actual | Rest], Red, Blue, Yellow, Green) :-     
-    % Painting Actual with Red
-    (adjacents(Actual, Adj),
-    canTint(Adj, Red),
+    adjacents(Actual, Adj),
+    (   
+    % Painting Actual with Red   
+    (canTint(Adj, Red),
     append(Red, [Actual], Modified),
     generate(Rest, Modified, Blue, Yellow, Green));
     
     % Painting Actual with Blue
-    (adjacents(Actual, Adj),
-    canTint(Adj, Blue),
+    (canTint(Adj, Blue),
     append(Blue, [Actual], Modified),
     generate(Rest, Red, Modified, Yellow, Green));
     
     % Painting Actual with Yellow
-    (adjacents(Actual, Adj),
-    canTint(Adj, Yellow),
+    (canTint(Adj, Yellow),
     append(Yellow, [Actual], Modified),
     generate(Rest, Red, Blue, Modified, Green));
     
     % Painting Actual with Green
-    (adjacents(Actual, Adj),
-    canTint(Adj, Green),
+    (canTint(Adj, Green),
     append(Green, [Actual], Modified),
     generate(Rest, Red, Blue, Yellow, Modified))
-    .
+    ).
 
 % Generates the territory, given the list of pieces
 genTerritory(Territory) :- 
+    % Test territory length
+    length(Territory, Length),
+    Length > 0, Length < 21,
+    % Check if there's isolated pieces
+    [Head|_] = Territory,
+    wideSearch([Head], WideSearchResult),
+    length(WideSearchResult, WideSearchLength),
+    WideSearchLength == Length,
+    % Generate color configurations
     generate(Territory, [], [], [], [])
+    .
+
+wideSearch([], _) :- !.
+
+% [Head|Tail] - Lista dos elementos ainda não percorridos
+% List - Lista dos elementos já percorridos
+wideSearch([Head | Tail], List) :- 
+    % Pega os adjacentes da Head
+    adjacents(Head, Adj),
+    % Remove dos adjacentes os que estão em List (já foram percorridos)
+    subtract(Adj, List, DistinctElements),
+    % Remove dos restantes os que estão em Tail (ainda vão ser percorridos)
+    subtract(DistinctElements, Tail, DistinctElements2),
+    % Adiciona a tail os restantes
+    append(Tail, DistinctElements2, TailModified),
+    % Adiciona Head a List (já percorridos)
+    append(List, [Head], ListModified),
+    wideSearch(TailModified, ListModified)
     .
