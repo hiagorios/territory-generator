@@ -51,7 +51,8 @@ edgeDef(p, r).
 % ====================== Territory definition =====================
 
 % Bidirectionally checking for edge
-edge(X, Y) :- (edgeDef(X, Y), !; edgeDef(Y, X)), !.
+edge(X, Y) :- (edgeDef(X, Y); edgeDef(Y, X)).
+adjacents(Elem, Adj) :- setof(Edges, edge(Elem, Edges), Adj).
 
 % Prints all color lists
 printConfiguration(Red, Blue, Yellow, Green) :- 
@@ -67,25 +68,39 @@ printConfiguration(Red, Blue, Yellow, Green) :-
     printList(Green)
     .
 
+canTint([], _) :- !.
+canTint([Head | Tail], ColorList) :- not(member(Head, ColorList)), canTint(Tail, ColorList).
+
 % Base case: List is empty and the configuration is printed
 generate([], Red, Blue, Yellow, Green) :- 
     printConfiguration(Red, Blue, Yellow, Green)
     .
 
 % General case
-generate([Actual | Rest], Red, Blue, Yellow, Green) :- 
+generate([Actual | Rest], Red, Blue, Yellow, Green) :-     
     % Painting Actual with Red
+    (adjacents(Actual, Adj),
+    canTint(Adj, Red),
     append(Red, [Actual], Modified),
-    generate(Rest, Modified, Blue, Yellow, Green);
+    generate(Rest, Modified, Blue, Yellow, Green));
+    
     % Painting Actual with Blue
+    (adjacents(Actual, Adj),
+    canTint(Adj, Blue),
     append(Blue, [Actual], Modified),
-    generate(Rest, Red, Modified, Yellow, Green);
+    generate(Rest, Red, Modified, Yellow, Green));
+    
     % Painting Actual with Yellow
+    (adjacents(Actual, Adj),
+    canTint(Adj, Yellow),
     append(Yellow, [Actual], Modified),
-    generate(Rest, Red, Blue, Modified, Green);
+    generate(Rest, Red, Blue, Modified, Green));
+    
     % Painting Actual with Green
+    (adjacents(Actual, Adj),
+    canTint(Adj, Green),
     append(Green, [Actual], Modified),
-    generate(Rest, Red, Blue, Yellow, Modified)
+    generate(Rest, Red, Blue, Yellow, Modified))
     .
 
 % Generates the territory, given the list of pieces
